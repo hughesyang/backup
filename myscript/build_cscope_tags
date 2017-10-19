@@ -17,4 +17,4 @@ cscope -q -R -b -i cscope.files
 # rm -f cscope.files cscope.in.out cscope.po.out
 
 # generate tags 
-ctags -R --c++-kinds=+p --fields=+iaS --extra=+q
+ctags -R --c++-kinds=+p --fields=+ialS --extra=+q
