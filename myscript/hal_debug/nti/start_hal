@@ -1,0 +1,131 @@
+#!/bin/bash
+# This script is used to startup the cmagg_sim.
+# It assumes that the mkpkg script was previously run to create an "execution" directory.
+
+export HAL_STANDALONE=y
+
+function usage()
+{
+    echo "USAGE:"
+    echo "======"
+    echo "`basename $0` card_type [slot]"
+    echo " "
+    echo "    card_type - the card software you want to run"
+    echo "                it would be one of {nemi, swf, stu, nti}"
+    echo "    slot - the slot number where this card runs"
+    echo "                if you ommit this param, a default slot is used as follow:"
+    echo "                nemi=26, swf=30, stu=28, nti=3"
+    echo " "
+    echo "If you have any problems, please contact Easwy"
+    exit 1
+}
+
+CARD=nti
+# SLOT=30
+
+# Set default slot number
+case ${CARD} in
+    nemi)
+    [ "x${SLOT}" == "x" ] && SLOT=26
+    ;;
+    swf)
+    [ "x${SLOT}" == "x" ] && SLOT=30
+    ;;
+    stu)
+    [ "x${SLOT}" == "x" ] && SLOT=28
+    ;;
+    nti)
+    [ "x${SLOT}" == "x" ] && SLOT=3
+    ;;
+    *)
+    echo "Unsupported card type ${CARD}"
+    exit 1
+    ;;
+esac
+
+OPT_BASE=/opt
+
+OPT_BLD=${OPT_BASE}
+OPT_3RD=${OPT_BASE}
+DBGTOOL=./debugTool
+HAL_IMG=./halNti
+
+# Export library path
+LD_LIBRARY_PATH=$OPT_BLD/lib:$OPT_3RD/lib
+export LD_LIBRARY_PATH
+
+ETH0=`ifconfig|grep -c eth0`
+if [ $ETH0 -eq 0 ]; then
+    ifconfig eth0 up
+fi
+
+ETH1=`ifconfig|grep -c eth1`
+if [ $ETH1 -eq 0 ]; then
+    bcm5348init
+    ifup eth1
+fi
+
+if [ ! -d /mnt/cm51/build ]; then
+    service rpcbind restart
+    service nfslock restart
+#    mount 192.168.190.33:/home/bldsrv/cm51/software/app_swf /mnt/cm51
+    mount 192.168.190.127:/home/hughes/f3/r51/software/app /mnt/cm51
+fi
+
+> /mnt/cm51/logs
+> /mnt/cm51/errlogs
+service syslog restart
+
+# Rename core file
+echo "core.%e" > /proc/sys/kernel/core_pattern
+
+# Change http configure file
+if [ ${CARD} == "nemi" ]; then
+    export NEMI_PATH=${OPT_BASE}
+    export PHPRC=${OPT_3RD}/conf
+
+    cd $PHPRC
+
+    if [ ! -f advahttpd.conf.orig ]; then
+        mv advahttpd.conf advahttpd.conf.orig
+    fi
+
+    if [ ! -f php.ini.orig ]; then
+        mv php.ini php.ini.orig
+    fi
+
+    echo "Modify configure file"
+    path_str=`echo ${OPT_BASE} | sed -e 's#\/#\\\/#g'`
+    echo "s/\/.*\/app/$path_str/" > adva.sed
+    echo "s/modules/$path_str\/modules/" >> adva.sed
+    sed -f adva.sed advahttpd.conf.orig > advahttpd.conf
+    rm adva.sed
+
+    echo "Modify ini file"
+    echo "s/\/.*\/app\//$path_str\//" > adva.sed
+    sed -f adva.sed php.ini.orig > php.ini
+    rm adva.sed
+fi
+
+# Stop previous application first
+${OPT_BASE}/stop_apps
+${OPT_BASE}/cleanup_apps
+
+# Allow the core file
+ulimit -c unlimited
+
+cd ${OPT_BLD}/bin
+case ${CARD} in
+    nemi|swf|stu|nti) 
+    rm -f core.* > /dev/null 2>&1
+    ${DBGTOOL} >/dev/null 2>&1 &
+    ${HAL_IMG} ${SLOT} 1 2 1 1 1 &
+    ;;
+    *)
+    echo "Unsupported card type ${CARD}"
+    exit 1
+    ;;
+esac
+
+
+exit 0

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# wrapper of egrep
+NAME_TO_FIND=test
+$NAME_TO_FIND:=test
+
+echo $NAME_TO_FIND

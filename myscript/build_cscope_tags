@@ -1,0 +1,20 @@
+#!/bin/bash
+# Generate a list of all source files starting from the current directory
+
+#find . -name "*.c" -o -name "*.cc" -o -name "*.cpp" -o -name "*.h" -o -name "*.hh" -o -name "*.hpp" > cscope.files
+
+find -regex '.*\.\(c\|h\|cc\|cpp\|cxx\|hh\|hpp\|hxx\)$' > cscope.files
+
+# -q build fast but larger database
+# -R search symbols recursively
+# -b build the database only, don't fire cscope
+# -i file that contains list of file paths to be processed
+# This will generate a few cscope.* files
+
+cscope -q -R -b -i cscope.files
+
+# Temporary files, remove them
+# rm -f cscope.files cscope.in.out cscope.po.out
+
+# generate tags 
+ctags -R --c++-kinds=+p --fields=+iaS --extra=+q

@@ -1,0 +1,119 @@
+#!/bin/bash
+# This script is used to build daily.
+# Notes: used at "crond_build_daily.conf"
+# 			#minute hour date month week [user] command
+#				 0      2    *    *     *           /home/bldserver/scripts/scripts_build_daily
+
+# set build directories
+HOME_DIR="/home/bldserver"
+SOFT_DIR="$HOME_DIR/r5.1agg/software"
+BLD_DIR="/$HOME_DIR/r5.1agg/software/app"
+TTT_DIR="$HOME_DIR/r5.1agg/software/ttt"
+LOG_DIR="$HOME_DIR/scripts/log"
+
+# get current date
+YEAR=`date +%Y`
+MONTH=`date +%m`
+DAY=`date +%e`
+HOUR=`date +%H`
+MINUTE=`date +%M`
+SECOND=`date +%S`
+WEEKDAY=`date +%a`
+BLD_DATE="$YEAR$MONTH$DAY.$HOUR$MINUTE$SECOND.$WEEKDAY"
+
+# set LOG Filenames
+LOG_BUILD="$LOG_DIR/log_build"
+LOG_SVN_UPDATE="$LOG_DIR/log_$BLD_DATE.svn_update"
+LOG_MAKE_NEMI="$LOG_DIR/log_$BLD_DATE.makenemi"
+LOG_MAKE_SCU="$LOG_DIR/log_$BLD_DATE.makescu"
+LOG_MAKE_SWF="$LOG_DIR/log_$BLD_DATE.makeswf"
+LOG_MAKE_STU="$LOG_DIR/log_$BLD_DATE.makestu"
+LOG_MAKE_NTI="$LOG_DIR/log_$BLD_DATE.makenti"
+LOG_MAKE_NTU="$LOG_DIR/log_$BLD_DATE.makentu"
+
+# daily build log
+echo "$BLD_DATE --- r5.1 cmagg daily build!!!" >> $LOG_BUILD
+
+# delete old app dir
+cd $SOFT_DIR
+pwd
+pwd > $LOG_SVN_UPDATE
+echo "rm -rf app"
+echo "rm -rf app" >> $LOG_SVN_UPDATE
+rm -rf app
+
+# update new app dir
+cd $SOFT_DIR
+echo "svn update"
+echo "svn update" >> $LOG_SVN_UPDATE
+svn update >> $LOG_SVN_UPDATE
+
+# backup new app dir
+cd $SOFT_DIR
+pwd
+pwd >> $LOG_SVN_UPDATE
+echo "tar -czvf app_clean.tar.gz app"
+echo "tar -czvf app_clean.tar.gz app" >> $LOG_SVN_UPDATE
+tar -czvf app_clean.tar.gz app
+
+# make new app
+cd $BLD_DIR
+chmod 755 make*
+chmod 755 ./tools/nemi_sim/*
+chmod 755 ./tools/scu_sim/*
+chmod 755 ./tools/swf_sim/*
+chmod 755 ./tools/stu_sim/*
+chmod 755 ./tools/nti_sim/*
+chmod 755 ./tools/ntu_sim/*
+
+# makenemi
+cd $BLD_DIR
+pwd
+echo "./makenemi"
+./makenemi $LOG_MAKE_NEMI
+./tools/nemi_sim/makenemipkg $TTT_DIR >> $LOG_MAKE_NEMI
+
+# makescu
+cd $BLD_DIR
+pwd
+echo "./makescu"
+./makescu $LOG_MAKE_SCU
+./tools/scu_sim/makescupkg $TTT_DIR >> $LOG_MAKE_SCU
+
+# makeswf
+cd $BLD_DIR
+pwd
+echo "./makeswf"
+./makeswf $LOG_MAKE_SWF
+./tools/swf_sim/makeswfpkg $TTT_DIR >> $LOG_MAKE_SWF
+
+# makestu
+cd $BLD_DIR
+pwd
+echo "./makestu"
+./makestu $LOG_MAKE_STU
+./tools/stu_sim/makestupkg $TTT_DIR >> $LOG_MAKE_STU
+
+
+# makenti
+cd $BLD_DIR
+pwd
+echo "./makenti"
+./makenti $LOG_MAKE_NTI
+./tools/nti_sim/makentipkg $TTT_DIR >> $LOG_MAKE_NTI
+
+
+# makentu
+cd $BLD_DIR
+pwd
+echo "./makentu"
+./makentu $LOG_MAKE_NTU
+./tools/ntu_sim/makentupkg $TTT_DIR >> $LOG_MAKE_NTU
+
+# tar new app
+cd $SOFT_DIR
+pwd
+echo "tar -czvf ttt.tar.gz ttt"
+tar -czvf ttt.tar.gz ttt
+rm -f "$HOME_DIR/ttt.tar.gz"
+mv ttt.tar.gz $HOME_DIR

@@ -1,0 +1,223 @@
+#!/bin/sh
+
+# Daily build script for CM5.1
+# by Easwy Yang
+
+# ****************************************************************
+# *** Change following lines to match your environment         ***
+# ****************************************************************
+
+# Your workspace where the app/ directory is in
+# For instance,
+# WS51=/home/easwy/10fsp150cm51/software
+
+# *** You must change WS51 variable followed ***
+WS51=/home/hughes/f3/dailybld/dev/software
+
+# Your PATH to search svn/jdk and other files
+PATH=/usr/local/jdk1.6.0_05/bin:/opt/CollabNet_Subversion/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:${PATH}
+JAVA_HOME=/usr/local/jdk1.6.0_05
+export PATH JAVA_HOME
+
+# Remove files older than 9 days
+RMDAYS=3
+
+# Tar files older than 5 days
+TARDAYS=3
+
+# ****************************************************************
+# *** Don't need to change lines after this line               ***
+# ****************************************************************
+
+DATE=`date +"%Y%m%d-%H%M"`
+
+APP=${WS51}/app
+APP_BAK=${APP}-${DATE}
+APP_TMP=${WS51}/tmp
+
+LOGDIR=${WS51}/logs
+LOGFN=${LOGDIR}/dailybld-${DATE}.log
+
+function log()
+{
+    echo $* >> ${LOGFN}
+}
+
+function runcmd()
+{
+    echo $* >> ${LOGFN}
+    $* >> ${LOGFN} 2>&1
+}
+
+function backup()
+{
+    STIME=`date`
+    log "===== Backup Start At ${STIME} ====="
+
+    # Mkdir
+    runcmd mkdir -p ${APP_TMP}
+
+    # Move build & 3rdparty/opt to a temp location
+    runcmd mv ${APP}/build  ${APP_TMP}
+    runcmd mv ${APP}/3rdparty/opt ${APP_TMP}
+    runcmd mkdir -p ${APP}/3rdparty/opt
+
+    # Backup old app directory
+    runcmd cp -a ${APP} ${APP_BAK}
+
+    # Move build & 3rdparty/opt to backup directory
+    runcmd mv ${APP_TMP}/build ${APP_BAK}/
+    runcmd mv ${APP_TMP}/opt ${APP_BAK}/3rdparty
+
+    ETIME=`date`
+    log "===== Backup End At ${ETIME} ====="
+    log " "
+}
+
+function update()
+{
+    STIME=`date`
+    log "===== Svn Update Start At ${STIME} ====="
+    runcmd svn update ${APP}
+    ETIME=`date`
+    log "===== Svn Update End At ${ETIME} ====="
+    log " "
+}
+
+function clean()
+{
+    STIME=`date`
+    log "===== Clean up Start At ${STIME} ====="
+    runcmd cd ${APP}
+    log "Cleanning up..."
+    ./makecleanall 1>/dev/null 2>&1
+    ETIME=`date`
+    log "===== Clean up End At ${ETIME} ====="
+    log " "
+}
+
+function build()
+{
+    TGT=$1
+    BLD_CMD="make BLD_TARGET=${TGT} BLD_PROD=cmagg QUIET=1"
+    BLDLOGDIR=${LOGDIR}/dailybld-${DATE}
+    BLDLOGFN=${BLDLOGDIR}/${TGT}bld-${DATE}.log
+
+    STIME=`date`
+    log "===== Build ${TGT} Start At ${STIME} ====="
+
+    runcmd mkdir -p ${BLDLOGDIR}
+
+    runcmd cd ${APP}
+    log ${BLD_CMD}
+    log "Build log is in ${BLDLOGFN}"
+    ${BLD_CMD} >> ${BLDLOGFN} 2>&1
+    if [ $? -ne 0 ]; then
+        log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        log "ERROR: Build ${TGT} FAILED"
+        log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        tail -n 32 ${BLDLOGFN} >> ${LOGFN} 2>&1
+        log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    fi
+
+    ETIME=`date`
+    log "===== Build ${TGT} End At ${ETIME} ====="
+    log " "
+}
+
+function getsecond()
+{
+    case "$1" in
+        0) STR="now"
+        ;;
+        1)
+        STR="1 day ago"
+        ;;
+        [2-9])
+        STR="$1 days ago"
+        ;;
+        *)
+        echo "0"
+        return
+        ;;
+    esac
+
+    DSTART=`date -d "${STR}" "+%Y%m%d"`
+    SECS=`date -d ${DSTART} "+%s"`
+
+    echo $SECS
+}
+
+function zipold()
+{
+    TODAYSEC=`getsecond 0`
+    RMSEC=`getsecond $RMDAYS`
+    TARSEC=`getsecond $TARDAYS`
+
+    if [ ${TODAYSEC} -eq 0 -o ${RMSEC} -eq 0 -o ${TARSEC} -eq 0 ]; then
+        log "zipold(): failed to get second"
+        return
+    fi
+
+    STIME=`date`
+    log "===== Rm/Zip Old Files Start At ${STIME} ====="
+
+    FILES=`ls --color=none -d ${WS51}/app-[0-9]*`
+    FILES="$FILES `ls --color=none -d ${LOGDIR}/*`"
+    for f in $FILES; do
+        FN=`basename $f`
+        FDATE=`echo ${FN} | awk -F- '{print $2}'`
+        FSEC=`date -d ${FDATE} "+%s"`
+
+        if [ "x$FSEC" == "x" ]; then
+            continue
+        fi
+
+        if [ ${FSEC} -lt ${RMSEC} ]; then
+            runcmd rm -rf $f
+        elif [ ${FSEC} -lt ${TARSEC} ]; then
+            if [ -d $f ]; then
+                runcmd cd `dirname ${f}`
+                runcmd tar -zcf ${f}.tgz ${FN}
+                runcmd rm -rf $f
+            fi
+        fi
+    done
+
+    ETIME=`date`
+    log "===== Rm/Zip Old Files End At ${ETIME} ====="
+    log ""
+}
+
+################################################
+# *** Main script start here ***
+################################################
+
+if [ "x${WS51}" == "x" ]; then
+    echo "You must define your workspace directory by setting WS_51 variable"
+    exit 1
+fi
+
+# Make logs directory
+if [ ! -d ${LOGDIR} ]; then
+    mkdir -p ${LOGDIR}
+fi
+
+# Backup first
+backup
+
+# Update from SVN server
+update
+
+# Clean up at first
+clean
+
+# Build targets
+for tgt in nemi_sim scu_sim swf_sim nti_sim stu_sim; do
+    build $tgt
+done
+
+# Remove/tar old backup files
+zipold
+
+exit 0

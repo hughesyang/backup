@@ -1,0 +1,12 @@
+#!/bin/bash
+# This script is used to stop or shutdown the application
+
+echo "pkill debugTool"
+pkill debugTool
+
+PRGS=`ps -ef |grep halNti | grep -v grep | awk '{print $2}'`
+
+for prg in $PRGS; do
+  echo "kill halNti"
+  kill -9 $prg
+done

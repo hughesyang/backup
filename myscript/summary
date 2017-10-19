@@ -1,0 +1,282 @@
+# CentOs 6 service
+chkconfig --list nfs
+chkconfig --level 234 nfs on
+service nfs status
+
+# CentOS 7
+// disable firewall
+systemctl disable firewalld.service
+
+// list all running serivce
+systemctl list-units --type=service
+
+// check services
+systemctl enable/disable vsftpd.service
+systemctl status/start/stop/restart vsftpd.service
+systemctl is-enabled vsftpd.service
+
+// open FTP 21 port, line=7. It will be lost after reboot.
+iptables -I INPUT 7 -p tcp --dport 21 -j ACCEPT
+
+// Or edit /etc/sysconfig/iptables, add below line, and do enable iptables (also need to disable fireware)
+-A INPUT -p tcp --dport 21 -j ACCEPT
+systemctl restart iptables
+systemctl enable iptables 
+
+# enable samba ports, add below lines to /etc/sysconfig/iptables
+-A INPUT -p udp -m multiport --dport 137,138 -j ACCEPT
+-A INPUT -p tcp -m multiport --dport 139 -j ACCEPT
+
+
+# list iptables 
+iptables -nL --line-numbers
+
+# disable SELINUX
+/etc/selinux/config
+
+# create user for ftp, name=pub, not allowed to login, path=/opt/pub
+adduser -d /opt/pub -g ftp -s /sbin/nologin pub
+
+
+# add route
+route add default gw 192.168.191.1
+
+
+
+# change to root to execute it.
+echo 'core.%e.%p' > /proc/sys/kernel/core_pattern
+
+
+# Check if core dump is enabled (note: if enable program by using script, this cmd must be called in the script, otherwise core dump can not be generated)
+
+ulimit -c
+
+# -- enable core dump
+ulimit -c unlimited
+
+
+# unzip the .iso file
+mount -o loop xxx.iso /mnt/tmp
+
+
+# check the disk partitions
+du -lh
+fdisk -l
+
+
+# show notation of each end of line 
+cat -e file
+
+# sort by file size
+ll -S
+# sort by modified time
+ll -t
+
+
+# solve the problem that can not ping vlan interface (under xen) with bigger packet size (>1476), this is a bug of linux kernel.
+echo 0 > /proc/sys/net/bridge/bridge-nf-call-iptables
+sysctl -w "net.bridge.bridge-nf-call-iptables=0"
+
+
+# list the thread by cpu consumption
+ps H -eo user,pid,ppid,tid,time,%cpu,cmd --sort=%cpu
+
+# count the lines...
+wc -l <file>
+wc -l `find -name "*.cpp"` | tail -n1
+
+# count and ignore empty lines
+find /demo -name "*.js" |xargs cat|grep -v ^$|wc -l
+
+# find string with "bcm_" start and "_oam_ais_add" end
+grep -r "^\<bcm_.*_oam_ais_add\>"
+
+
+# diff and patch
+diff -Nur r51/software/app/hal/halmgr/ r51_tmp/software/app/hal/halmgr/ > patchfile
+patch -p1 < patchfile
+
+diff -Naur software-1.0.orig software-1.0 > fix-bug.patch
+patch --dry-run -Np2 -d software-1.0 < fix-bug.patch  // dry-run:  patch isn't actually applied
+
+
+
+# Apply a SVN change: e.g. merge the change from r100 to r101 to my branch
+#
+# way 1: svn diff then apply patch
+svn di -r 100:101  https://advactfdev.com/svn/repos/fsp150cm/branches/software/r8.2egx/dev/software/app > patchfile
+
+// go to my branch software, e.g. 9.1, then apply the patch
+patch -p0 -d app < patchfile
+svn ci
+
+# way 2: svn merge way
+svn merge --force --non-interactive -r100:101 https://advactfdev.com/svn/repos/fsp150cm/branches/software/r8.2egx/dev/software/app .svn ci 
+
+
+# count the code lines for .cc files in the current path.
+ll | grep .cc$ | awk '{print $9}' | while read f; do wc -l $f; done 
+
+# search a line with only "nte"
+grep "^nte$" file
+
+# search the the exact line "nte", the case "nnte" or "ntee" is bypassed
+grep "\bnte\b" file
+
+
+# import RPM GDP signing key which is used to sign packages. Then can use yum install <package>
+rpm --import RPM-GPG-KEY-CentOS-5 
+
+yum insall gdb  # for example
+yum -qa |grep xxx
+rpm -ivh  // install
+rpm -Uvh  // upgrade 
+rpm -e    // erase
+
+
+# show hard partition and  usage
+df -lh
+
+
+# make VI work properly at board
+export TERM=vt102
+
+
+# check process Rcv/Snd Q state (for debug)
+netstat -pa | grep hal
+
+
+# lookup "alias" from all Makefile under /.
+find / -name "Makefile" | xargs grep "alias"
+
+# search all CVS and delete it
+find ../dir -name CVS -type d -exec rm -rf {} \;
+
+# lookup "abc" or "123" at file, and print the line number
+grep -nE "abc|123" file
+
+
+# check in with local file commit failed last time
+svn commit -F svn-commit.tmp
+
+
+# clear linux cache
+sync
+echo 3 > /proc/sys/vm/drop_caches
+
+
+# capture pkt
+tcpdump udp src and dst portrange 10-20 -e -vv and host 192.168.1.3
+tcpdump -vvv -e -i eth0
+
+tcpdump -i eth0 -vvvXX icmp  // vvv: as much info as possbible, XX: show packet content, incl. eth header
+
+
+
+# add static ARP entry
+arp -i ptp1 -s 10.0.0.1 00:01:02:03:04:05
+
+
+# Makefile to check if TGT_UNIT is nti or eos
+ifeq ($(TGT_UNIT), $(filter $(TGT_UNIT), nti, eos))
+  OBJS += test.o
+endif
+
+# set prope for opt folder (ignore eos and eos_sim)
+svn ps svn:ignore eos eos_sim opt
+
+# get prope of opt
+svn pl opt -v
+
+# get svn externals
+svn pg svn:externals -R
+
+# don't show lines with X started
+svn st -q |grep -v '^X'
+
+
+
+# delete all empty blank lines for a file
+way1:  grep -v '^$' file
+way2:  sed '/^$/d'  file 
+way3:  sed -n '/./p' file
+way4:  awk '/./ {print}' file
+
+
+# check if OS is 32b or 64b
+way1: getconf LONG_BIT
+way2: file /bin/ls
+
+# check if lib file is 32b or 64b
+objdump -a *.so // or .a
+
+
+# translate TOD time to /Y/M/D
+date -d @123456789
+
+
+# uncompress 
+.tar.gz    //tar -zxvf xx.tar.gz
+
+.tar.bz2  // tar -jxvf xx.tar.bz2
+
+
+# change file name in batch
+# e.g. change file with Sync in name to Timing
+rename 'Sync' 'Timing' *
+
+
+### HOWTO compile 32b app at 64b machine
+yum list *glibc*
+
+yum install glibc.i686
+yum install glibc-devel.i686
+yum install libstdc++.i686
+
+
+### HOWTO Statically Compiling C/C++ Programs on CentOS 7
+# e.g. if -static is specified in LDFLAGS, then the static version of glibc, libstdc++ is needed.
+yum -y install glibc-static libstdc++-static
+
+
+### HOWTO ssh w/o password
+1)at server, edit etc/ssh/sshd_config to enable below stuff
+RSAAuthentication yes
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+
+2)at server, do below:
+mkdir .ssh
+chmod 700 .ssh   //make sure 700
+
+touch .ssh/authorized_keys
+chmod 600 .ssh/authorized_keys  // make sure 600
+
+3) at client, run "ssh-kengen -t rsa" to generate key file
+4) copy "id_rsa.pub" context to server's .ssh/authorized_keys
+
+### HOWTO disable client to SSH to your shell, e.g. only allow to access git.
+# edit server's /etc/passwd and find your user, 
+bcm:x:1002:1002::/home/bcm:/bin/bash  --> below
+bcm:x:1002:1002::/home/bcm:/usr/bin/git-shell
+
+
+### HOWTO doxygen
+doxygen -g myconfig  # to generate config file
+
+#edit myconfig to update below things:
+PROJECT_NAME = // project name
+OUTPUT_DIRECTORY = mydoc // the folder to generate docs
+GENERATE_LATEX = NO // do not generate LaTex 
+FILE_PATTERNS = *.hpp *.h  // the file typs to scan
+RECURSIVE = YES  // to recursive sub dirs
+
+# to generate docs
+doxygen myconfig
+
+
+### HOWTO cscope, assuming the source dir is <dir>
+find <dir> -name *.hpp -o -name *.cpp > cscope.files  
+cscope -Rbqk -i cscope.files
+
+# then :cs add <dir>/cscope.out  to load db

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# wrapper of egrep
+
+if [ $# -ne "1" ]; then
+  echo "Usage: `basename $0` <pattern>"
+  exit
+fi
+
+NAME_TO_FIND=$1
+
+egrep ${NAME_TO_FIND} . -r --color=auto

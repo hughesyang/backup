@@ -1,0 +1,403 @@
+#!/bin/bash
+#
+# This script is used to create flows for HW test. 
+# Please contact Hughes if needed.
+# 
+
+
+
+# --------------------functions----------------------
+
+function usage()
+{
+ echo "Usage: `basename $0` [-t type] [-s slot] [-j tm_offset] [-f output_file]
+        -t: 10ge for 10GE card, xge for 1XGE card
+        -s: slot (1~24)
+	-j: TM port offset for source slot (0~79)
+	-f: output file name, in .txt format"
+ echo "Please contact Hughes if you have trouble using it."	
+ exit 1
+}
+
+function line()
+{
+  echo $* >> $FILE
+}
+
+function empty_line()
+{
+  line ""
+}
+
+function sleep()
+{
+ # sleep 2 seconds
+  line "#sleep 2000" >> $FILE
+}
+
+function title()
+{
+ line "# This script is used to set up the service for HW group test."
+ line "# It creates flows on self card."
+ line "# It does the followings:"
+ line "#   service-1: slot-1,port1 <--> slot-1,port-2"
+ line "#   ..."
+ line "#   service-10: slot-1,port9 <--> slot-1,port-10"
+ line "#   -----------------------------------------------" 
+ line "#   Petra-1 resource usage:"
+ line "#     slot-1: voq 1k~2k, schflow 2k~4k"
+ line "#       port-1: voq 1k, schflow 2k"
+ line "#       port-2: voq 1k+100, schflow 2k+200"
+ line "#       port-10: voq 1k+900, schflow 2k+1800"
+ line "#     slot-11: voq 11k~12k, schflow 22k~24k"
+ line "#     ------------------------------------------"
+ line "#   Petra-2 resource usage(symmetrical with Petra-1):"
+ line "#     slot-13: voq 1k~2k, schflow 2k~4k"
+ line "#      port-1: voq 1k, schflow 2k"
+ line "#      port-2: voq 1k+100, schflow 2k+200"
+ line "#      port-10: voq 1k+900, schflow 2k+1800"
+ line "#     slot-23: voq 11k~12k, schflow 22k~24k "
+ line "#     ------------------------------------------"
+}
+
+# --------------------start----------------------
+CARD_TYPE=
+FILE=
+SRC_SLOT=
+SRC_TM_BASE=
+
+while getopts t:s:j:d:k:f: opt
+do
+  case $opt in
+    t) CARD_TYPE=$OPTARG
+       ;;
+    s) SRC_SLOT=$OPTARG
+       ;;
+    j) SRC_TM_BASE=$OPTARG
+       ;;
+    f) FILE=$OPTARG
+       ;;
+    ?) usage
+       ;;
+  esac
+done
+ 
+ 
+# Check card type
+case ${CARD_TYPE} in
+    10ge)
+    PORT_NUM=10
+    SHAPED_SPD=1000000000
+    ;;
+    xge)
+    PORT_NUM=1
+    SHAPED_SPD=10000000000
+    ;;
+    *)
+    echo "Error! Unsupported card type: ${CARD_TYPE}"
+    usage
+    ;;
+esac
+
+
+# Check output file ------------------------------------------------
+if [ -z "$FILE" ];
+then
+  echo "Error! Please specify the output file."
+  usage
+fi
+
+
+# Check the -s, parameters -----------------------------------------
+if [ -z "$SRC_SLOT" ]; then
+  echo "Error! Please specify the source slot."
+  usage
+fi
+if [ $SRC_SLOT -gt 24 ]; then
+  echo "Error! Invalid src slot number: $SRC_SLOT."
+  usage
+fi
+
+if [ $SRC_SLOT -le 12 ]; then
+  SRC_DEV=0
+  SRC_SLOT_RELATIVE=$SRC_SLOT
+else
+  SRC_DEV=1
+  ((SRC_SLOT_RELATIVE=$SRC_SLOT - 12))
+fi
+
+
+# Check the -j, parameters ------------------------------------------
+if [ -z "$SRC_TM_BASE" ]; then
+  echo "Error! Please specify the TM port offset for source slot."
+  usage
+fi
+if [ $SRC_TM_BASE -gt 79 ]; then
+  echo "Error! Invalid TM port: $SRC_TM_BASE."
+  usage
+fi
+
+
+# SLOT_NUM=6
+
+VOQ_QUARTET_BASE=256
+VOQ_QUARTET_SPACE=25
+SCHFLOW_QUARTET_BASE=512
+SCHFLOW_QUARTET_SPACE=50
+
+
+> $FILE
+title
+
+line "connect hal"
+line "petra"
+empty_line
+
+line "# ============================================================="
+line "# Step 1:"
+line "#  Set Queue Profile"
+line "#  --usage: provQueProfile <profileId> <qsize> <REDEnabled>"
+line "# ============================================================="
+line "provQueProfile 1 1048576 0"
+empty_line
+
+line "# ============================================================="
+line "# Step 2:"
+line "#  Set MeterProfile"
+line "#  --usage: provMeterProfile <profileId> <cir (bps)> <eir (bps)> <cbs (KB)> <ebs (KB)>"
+line "#                            <color-mode(1:aware;0:blind)> <cf (0 or 1)>"
+line "# ============================================================="
+METER_CIR=$SHAPED_SPD
+((METER_CBS=$SHAPED_SPD/8000))
+line "provMeterProfile 1 $METER_CIR 0 $METER_CBS 0 0 0"
+empty_line
+empty_line
+
+
+line "# ############################################################################"
+line "# ############################################################################"
+line "# Service created on slot-$SRC_SLOT, card type=$CARD_TYPE"
+line "# ############################################################################"
+line "# ############################################################################"
+empty_line
+
+((SRC_SLOT_EID=$SRC_SLOT + 1))
+
+
+line "# ============================================================="
+line "# Step 3: "
+line "#  Set TM port -> NIF/channel mapping"
+line "#  --usage: provTmPort <dev> <tm-port> <slot> <port>"
+line "#   <dev>:  0~1"
+line "#   <tm-port>: 0~79"
+line "#   <slot>: 2~25 coressponding to actual slot of 1~24"
+line "#   <port>: 1~10"    
+line "# ============================================================="
+
+for ((port=1; port<=$PORT_NUM; port++))
+do
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port - 1))
+    
+    line "provTmPort $SRC_DEV $SRC_TM_PORT $SRC_SLOT_EID $port"
+done
+empty_line
+
+
+line "# ============================================================="
+line "# Step 4: "
+line "#  Set PP port"
+line "#  --usage: provPpPort <dev> <tm-port> <pp-port>"
+line "#   <dev>:  0~1"
+line "#   <tm-port>: 0~79"
+line "#   <pp-port>: 0~63"
+line "# ============================================================="
+
+for ((port=1; port<=$PORT_NUM; port++))
+do
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port - 1))
+    SRC_PP_PORT=$SRC_TM_PORT
+  
+    line "provPpPort $SRC_DEV $SRC_TM_PORT $SRC_PP_PORT"
+done
+empty_line
+
+
+line "# ============================================================="
+line "# Step 5: "
+line "#  Set AC"
+line "#  --usage: provP2pAc <dev> <ac-id> <peer-ac-id> <is-lag> <dest-id>"
+line "#                     [ctag-op(PUSH/PUSHVID/SWAPVID/NONE)] [ctag(vid-prio)] [stag-op] [stag] [swap-cvid]"
+line "#                     [is-regular] [vlan-domain]"
+line "#   <dev>:  0~1"
+line "#   <ac-id>/<peer-ac-id>: 0~16k-1"
+line "#   <is-lag>: 0~1"
+line "#   <dest-id>: Lag-Id or Flow-Id"
+line "# ============================================================="
+
+for ((port=1; port<=$PORT_NUM; port++))
+do
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port - 1))
+    ((AC_ID=($SRC_SLOT - 1)*10 + $port))
+
+  if [ $PORT_NUM -eq 1 ]; then
+    # xge case
+    ((DST_TM_PORT=$SRC_TM_BASE + $port - 1))
+    PEER_AC_ID=$AC_ID
+  else
+    # 10ge case
+      ((FACTOR=$port % 2))
+    
+   if [ $FACTOR -eq 0 ]; then
+    ((DST_TM_PORT=$SRC_TM_BASE + $port - 2))
+    ((PEER_AC_ID=$AC_ID - 1))
+   else
+    ((DST_TM_PORT=$SRC_TM_BASE + $port))
+    ((PEER_AC_ID=$AC_ID + 1))
+   fi
+  fi
+  
+    ((FLOW_ID=(($SRC_SLOT_RELATIVE*$VOQ_QUARTET_BASE) + ($port-1)*$VOQ_QUARTET_SPACE) * 4))
+
+    line "provP2pAc $SRC_DEV $AC_ID $PEER_AC_ID 0 $FLOW_ID"
+done
+empty_line
+
+
+line "# ============================================================="
+line "# Step 6: "
+line "#  Set Meter Instance"
+line "#  --usage: provMeter <dev> <meter-id> <profile-id>"
+line "#   <dev>:  0~1"
+line "#   <meter-id>: 0~16k-1"
+line "#   <profile-id>: 0~511"
+line "# ============================================================="
+
+for ((port=1; port<=$PORT_NUM; port++))
+do
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port - 1))
+    METER_ID=$SRC_TM_PORT
+
+    line "provMeter $SRC_DEV $METER_ID 1"
+done
+empty_line
+
+
+line "# ============================================================="
+line "# Step 7: "
+line "#  Set TM port shaping/scheduling"
+line "#  --usage: provPortShaping <dev> <tm-port> <shaped-speed(bps)>"
+line "#   <shaped-speed(bps)>:  shaping speed, in bps"
+line "# ============================================================="
+
+for ((port=1; port<=$PORT_NUM; port++))
+do
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port - 1))
+    
+    line "provPortShaping $SRC_DEV $SRC_TM_PORT $SHAPED_SPD"
+    sleep
+done
+empty_line
+
+
+line "# ============================================================="
+line "# Step 8: "
+line "#  Set VOQ -> SchFlow mapping"
+line "#  --usage: provVoq2SchFlowMapping <dev-of-voq> <voq-qrtt-id> <dev-of-sch-flow> <tm-port> <sch-flow-qrtt-id>"
+line "#   <voq-qrtt-id>: voq-id/4"
+line "#   <sch-flow-qrtt-id>: sch-flow/4"
+line "# ============================================================="
+ 
+for ((port=1; port<=$PORT_NUM; port++))
+do
+
+ if [ $PORT_NUM -eq 1 ]; then
+    # xge case
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port - 1))
+ else
+    # 10ge case
+      ((FACTOR=$port % 2))
+    
+   if [ $FACTOR -eq 0 ]; then
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port - 2))
+   else
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port))
+   fi
+ fi
+
+    ((SRC_VOQ_QUARTET=($SRC_SLOT_RELATIVE*$VOQ_QUARTET_BASE) + ($port-1)*$VOQ_QUARTET_SPACE))
+    ((SRC_SCHFLOW_QUARTET=($SRC_SLOT_RELATIVE*$SCHFLOW_QUARTET_BASE) + ($port-1)*$SCHFLOW_QUARTET_SPACE))
+ 
+    line "provVoq2SchFlowMapping $SRC_DEV $SRC_VOQ_QUARTET $SRC_DEV $SRC_TM_PORT $SRC_SCHFLOW_QUARTET"
+done
+empty_line
+
+
+line "# ============================================================="
+line "# Step 9: "
+line "#  Set SchFlow -> VOQ mapping"
+line "#  --usage: provSchFlow2VoqMapping <dev-of-voq> <voq-qrtt-id> <dev-of-sch-flow> <sch-flow-qrtt-id>"
+line "# ============================================================="
+ 
+for ((port=1; port<=$PORT_NUM; port++))
+do
+    ((SRC_VOQ_QUARTET=($SRC_SLOT_RELATIVE*$VOQ_QUARTET_BASE) + ($port-1)*$VOQ_QUARTET_SPACE))
+    ((SRC_SCHFLOW_QUARTET=($SRC_SLOT_RELATIVE*$SCHFLOW_QUARTET_BASE) + ($port-1)*$SCHFLOW_QUARTET_SPACE))
+ 
+    line "provSchFlow2VoqMapping $SRC_DEV $SRC_VOQ_QUARTET $SRC_DEV $SRC_SCHFLOW_QUARTET"
+done
+empty_line
+
+
+line "# ============================================================="
+line "# Step 10: "
+line "#  Set VOQ"
+line "#  --usage: provVoq <dev> <voq-id> <profile-id>"
+line "#   <dev>:  0~1"
+line "#   <voq-id>: 0~32k-1"
+line "#   <profile-id>: 0~63"
+line "# ============================================================="
+ 
+for ((port=1; port<=$PORT_NUM; port++))
+do
+    ((SRC_VOQ=(($SRC_SLOT_RELATIVE*$VOQ_QUARTET_BASE) + ($port-1)*$VOQ_QUARTET_SPACE) * 4))
+
+    line "provVoq $SRC_DEV $SRC_VOQ 1"
+done
+empty_line
+
+
+line "# ============================================================="
+line "# Step 11: "
+line "#  Set SchFlow"
+line "#  --usage: provSchFlowForAggregate <dev> <tm-port> <sch-flow-id> <cir> <eir> <output-cos>"
+line "#   <cir>/<eir>: in bps"
+line "#   <output-cos>: 0~7(7 is highest)"
+line "# ============================================================="
+ 
+for ((port=1; port<=$PORT_NUM; port++))
+do
+ if [ $PORT_NUM -eq 1 ]; then
+    # xge case
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port - 1))
+ else
+    # 10ge case
+      ((FACTOR=$port % 2))
+    
+   if [ $FACTOR -eq 0 ]; then
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port - 2))
+   else
+    ((SRC_TM_PORT=$SRC_TM_BASE + $port))
+   fi
+  fi
+    
+    ((SRC_SCHFLOW=(($SRC_SLOT_RELATIVE*$SCHFLOW_QUARTET_BASE) + ($port-1)*$SCHFLOW_QUARTET_SPACE) * 4))
+
+    line "provSchFlowForAggregate $SRC_DEV $SRC_TM_PORT $SRC_SCHFLOW $SHAPED_SPD $SHAPED_SPD 7"
+done
+empty_line
+empty_line
+    
+
+unix2dos $FILE 2>/dev/null
+
+exit 0
