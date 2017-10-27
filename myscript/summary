@@ -92,12 +92,26 @@ find /demo -name "*.js" |xargs cat|grep -v ^$|wc -l
 grep -r "^\<bcm_.*_oam_ais_add\>"
 
 
-# diff and patch
-diff -Nur r51/software/app/hal/halmgr/ r51_tmp/software/app/hal/halmgr/ > patchfile
-patch -p1 < patchfile
+// good example to count codes lines, ignoring commeents
+grep -cvE '(^\s*[/*])|(^\s*$)' <file>
 
-diff -Naur software-1.0.orig software-1.0 > fix-bug.patch
-patch --dry-run -Np2 -d software-1.0 < fix-bug.patch  // dry-run:  patch isn't actually applied
+-c = count
+-v = exclude
+-E = extended regex
+'(comment lines) OR (empty lines)'
+where
+^    = beginning of the line
+\s   = whitespace
+*    = any number of previous characters or none
+[/*] = either / or *
+|    = OR
+$    = end of the line
+
+
+
+# diff and patch
+diff -Naur r51/software/app/hal/halmgr/ r51_tmp/software/app/hal/halmgr/ > patchfile
+patch -p1 < patchfile
 
 
 
@@ -278,5 +292,96 @@ doxygen myconfig
 ### HOWTO cscope, assuming the source dir is <dir>
 find <dir> -name *.hpp -o -name *.cpp > cscope.files  
 cscope -Rbqk -i cscope.files
-
 # then :cs add <dir>/cscope.out  to load db
+
+
+##########################
+### HOWTO tmux usage
+##########################
+tmux lscm  // show all tmux commands
+
+# session command
+tmux new -s test           // create a session called test
+
+tmux attach -t test        // attach to session
+tmux kill-session -t test  // delete session
+tmux ls                    // list sessions
+
+# windows
+C-b c       // new window
+C-b n or p  // next/prev window
+C-b &       // close window
+C-b d       // save session and exit, tmux is still running
+
+# in a window, wecan split into panes
+C-b %       // split pane horizontally
+C-b "       // split pane vertically
+C-b <arrow> // switch panes
+C-b x       // close pane
+
+C-b t       // show clock
+
+
+##########################
+### HOWTO vim
+##########################
+
+# 1) mics
+vim -o file1 file2  // 水平打开2个文件
+vim -O file1 file2  // 垂直打开2个文件
+
+# 2) Edit
+diw/yiw/ciw/view     // delete/copy/cut/view current word, (copy inner word)
+
+ct.     // （将当前光标到 . (点) 之间的内容删除并进入 insert mode 准备修改）
+ci"     //（这个命令会找到当前光标所在行的下一个 " 括起来的字符串，清除引号裏面的内容，并进入 insert mode）
+
+ggguG   // 整篇大写转换为小写
+gggUG   // 整篇小写转换为大写
+guw     // 将光标下的词改为小写
+gUw     // 将光标下的词改为小写
+guu     // 将当前行的字母改为小写
+gUU     // 将当前行的字母改为大写
+
+:g/123/s//456/g //全局将123替换成456
+
+# 3) search
+/\<xxx\>  //全字匹配
+
+# -------------------------------------------------------------
+# CentOS Install vim-8.0
+# -------------------------------------------------------------
+yum install ncurses-devel
+wget https://github.com/vim/vim/archive/master.zip
+unzip master.zip
+cd vim-master
+cd src/
+sudo ./configure --with-features=huge --enable-multibyte  --enable-python3interp 
+       --with-python3-config-dir=/usr/lib64/python3.6/config-3.6m-x86_64-linux-gnu  
+       --enable-pythoninterp --with-python-config-dir=/usr/lib/python2.7/config  
+       --enable-fail-if-missing
+sudo make
+sudo make install
+
+# -------------------------------------------------------------
+# CentOS: If install YouCompleteMe failed, try to update gcc.
+# -------------------------------------------------------------
+# To get the version
+yum install -y redhat-lsb
+
+# Standard dev tools
+yum groupinstall -y "Development tools"
+
+# Install devtoolset-6
+yum install -y centos-release-scl
+yum install -y devtoolset-6
+
+# Activate it
+source /opt/rh/devtoolset-6/enable
+
+# -------------------------------------------------------------
+# Install Vundle 
+# -------------------------------------------------------------
+mkdir ~/.vim
+git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+

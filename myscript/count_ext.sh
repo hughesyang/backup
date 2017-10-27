@@ -32,7 +32,7 @@ parseArgs $*
 
 #COUNT_CMD=`wc -l`
 
-FIND_FILES=`find ./ -regextype posix-extended -regex ".*\.(h|hpp|hxx|c|cc|cpp)"`
+FIND_FILES=`find ./ -regextype posix-extended -regex ".*\.(hpp|hxx|c|cc|cpp)"`
 
 RESULT=tmp.log
 
