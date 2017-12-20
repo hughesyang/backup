@@ -9,7 +9,6 @@ call vundle#begin()
 
 Plugin 'VundleVim/Vundle.vim'
 Plugin 'morhetz/gruvbox'
-Plugin 'altercation/vim-colors-solarized'
 Plugin 'CSApprox'
 Plugin 'ScrollColors'
 Plugin 'scrooloose/syntastic'
@@ -95,7 +94,7 @@ set fileencoding=utf-8
 set termencoding=utf-8
 set encoding=utf-8
 
-" Color scheme
+" Color settings
 set t_Co=256
 "set background=dark
 
@@ -128,6 +127,12 @@ if has("autocmd")
     autocmd FileType c,cpp setlocal commentstring=//\ %s
     autocmd FileType vim setlocal commentstring="/\ %s
 endif
+
+
+" --------------------------------------------
+" Hot keys
+" --------------------------------------------
+nmap <Leader>c :noh<CR>
 
 
 " --------------------------------------------
@@ -247,7 +252,7 @@ let g:Lf_CommandMap = {'<C-C>': ['<Esc>', '<C-C>']}
 let g:Lf_ShortcutF = '<F5>' 
 let g:Lf_ShortcutB = '<F6>' 
 
-nnoremap <Leader>a :LeaderfFunctionAll<CR>
+nnoremap <Leader>a :LeaderfFunction<CR>
 nnoremap <Leader>t :LeaderfTag<CR>
 nnoremap <Leader>m :LeaderfMru<CR>
 
@@ -319,5 +324,5 @@ let g:ycm_collect_identifiers_from_tags_files=1
 "let g:ycm_collect_identifiers_from_comments_and_strings=0
 
 " hot keys
-nnoremap <F12> :YcmForceCompileAndDiagnostics<CR>
+"nnoremap <F12> :YcmForceCompileAndDiagnostics<CR>
 
