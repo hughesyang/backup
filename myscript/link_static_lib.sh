@@ -36,7 +36,7 @@ TOOL_DIR=
 # arch type
 case ${ARCH} in
     arm)
-      CROSS_COMPILE=
+      CROSS_COMPILE=aarch64-linux-gnu-
       TOOL_DIR=/usr/bin
       export PATH=${TOOL_DIR}:${PATH}
       ;;

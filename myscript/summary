@@ -91,8 +91,10 @@ find /demo -name "*.js" |xargs cat|grep -v ^$|wc -l
 # find string with "bcm_" start and "_oam_ais_add" end
 grep -r "^\<bcm_.*_oam_ais_add\>"
 
+# find string with "start" and following any value in A-Z, a-z, 0-9
+grep -r  ",[A-Za-z0-9]"
 
-// good example to count codes lines, ignoring commeents
+// good example to count codes lines, ignoring comments
 grep -cvE '(^\s*[/*])|(^\s*$)' <file>
 
 -c = count
