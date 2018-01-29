@@ -1,11 +1,11 @@
 #!/bin/bash
 # This script is used to merge multiple static libs to a single one
-# Note: run it at the directory where holding .a and .o files
+# Note: run it at the directory where BCM SDK .a and .o files are located
 
 # --------------------------------------------------
 function usage()
 {
-  echo "Usage: `basename $0` [-a (arm|x86)]"
+  echo "Usage: `basename $0` [-a (arm8|x86)]"
   exit 0
 }
 
@@ -35,7 +35,7 @@ TOOL_DIR=
 
 # arch type
 case ${ARCH} in
-    arm)
+    arm8)
       CROSS_COMPILE=aarch64-linux-gnu-
       TOOL_DIR=/usr/bin
       export PATH=${TOOL_DIR}:${PATH}
