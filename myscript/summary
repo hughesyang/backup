@@ -4,6 +4,25 @@ chkconfig --level 234 nfs on
 service nfs status
 
 # CentOS 7
+// restart sshd
+systemctl restart sshd.service
+
+// ssh w/o password:
+sshd为了安全，对属主的目录和文件权限有所要求。如果权限不对，则ssh的免密码登陆不生效。
+用户目录权限为 755 或者 700，就是不能是77x。
+.ssh目录权限一般为755或者700。
+rsa_id.pub 及authorized_keys权限一般为644
+rsa_id权限必须为600
+
+// nfs
+yum install -y rpc-bind nfs-utils
+systemctl start nfs
+systemctl start rpcbind
+
+// show mount info of the host
+showmount -e 172.23.5.118
+
+
 // disable firewall
 systemctl disable firewalld.service
 
