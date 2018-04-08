@@ -91,7 +91,7 @@ set noswapfile
 " Encoding
 set fileencodings=utf-8,gb18030,gbk,gb2312
 set fileencoding=utf-8
-set termencoding=utf-8
+"set termencoding=utf-8
 set encoding=utf-8
 
 " Color settings
@@ -252,7 +252,7 @@ let g:Lf_CommandMap = {'<C-C>': ['<Esc>', '<C-C>']}
 let g:Lf_ShortcutF = '<F5>' 
 let g:Lf_ShortcutB = '<F6>' 
 
-nnoremap <Leader>a :LeaderfFunction<CR>
+nnoremap <Leader>f :LeaderfFunction<CR>
 nnoremap <Leader>t :LeaderfTag<CR>
 nnoremap <Leader>m :LeaderfMru<CR>
 
@@ -294,15 +294,15 @@ endif
 " 7 or f: this file
 " 8 or i: files #including this file
 " 9 or a: places where this symbol is assigned a value
-nnoremap <C-_>s :cs find s <C-R>=expand("<cword>")<CR><CR>
-nnoremap <C-_>g :cs find g <C-R>=expand("<cword>")<CR><CR>
-nnoremap <C-_>d :cs find d <C-R>=expand("<cword>")<CR><CR>
-nnoremap <C-_>c :cs find c <C-R>=expand("<cword>")<CR><CR>
+nnoremap <Leader>s :cs find s <C-R>=expand("<cword>")<CR><CR>
+nnoremap <Leader>g :cs find g <C-R>=expand("<cword>")<CR><CR>
+nnoremap <Leader>d :cs find d <C-R>=expand("<cword>")<CR><CR>
+nnoremap <Leader>c :cs find c <C-R>=expand("<cword>")<CR><CR>
 nnoremap <C-_>t :cs find t <C-R>=expand("<cword>")<CR><CR>
 nnoremap <C-_>e :cs find e <C-R>=expand("<cword>")<CR><CR>
 nnoremap <C-_>f :cs find f <C-R>=expand("<cfile>")<CR><CR>
 nnoremap <C-_>i :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
-nnoremap <C-_>a :cs find a ^<C-R>=expand("<cfile>")<CR>$<CR>
+nnoremap <Leader>a :cs find a ^<C-R>=expand("<cfile>")<CR>$<CR>
 
 " --------------------------------------------
 " YouCompleteMe
