@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# dnx git commit
+
+if [ $# -ne "1" ]; then
+  echo "Usage: `basename $0` <pattern>"
+  exit
+fi
+
+COMMIT_MSG=$1
+
+git ci -am "[GE1D-5543]: ${COMMIT_MSG}"
+
