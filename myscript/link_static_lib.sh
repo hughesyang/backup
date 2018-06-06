@@ -79,7 +79,11 @@ do
 
    for O in ${OBJ}
    do
-       mv ${O} ${F}_${O}
+       if [ -f "${O}" ]; then
+           mv ${O} ${F}_${O}
+       else
+           echo "Warning: ${O} not exist, ignored."
+       fi
    done
 done
 
