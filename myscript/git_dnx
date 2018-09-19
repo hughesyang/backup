@@ -9,5 +9,7 @@ fi
 
 COMMIT_MSG=$1
 
+git add .
+git clang-format
 git ci -am "[GE1D-5543]: ${COMMIT_MSG}"
 
