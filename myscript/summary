@@ -244,6 +244,9 @@ way2: file /bin/ls
 
 # check if lib file is 32b or 64b
 objdump -a *.so // or .a
+readelf -f *.a
+
+file *.so // only dynamical lib
 
 
 # translate TOD time to /Y/M/D
