@@ -248,6 +248,12 @@ readelf -f *.a
 
 file *.so // only dynamical lib
 
+# check if a library was compiled with -g
+objdump -g *.a //There should be an entry for each object file in the library if w/o -g.
+
+
+# list the needed lib
+readelf -d libTest.so | grep NEEDED
 
 # translate TOD time to /Y/M/D
 date -d @123456789
