@@ -255,6 +255,9 @@ objdump -g *.a //There should be an entry for each object file in the library if
 # list the needed lib
 readelf -d libTest.so | grep NEEDED
 
+# list symbols
+nm *.so
+
 # translate TOD time to /Y/M/D
 date -d @123456789
 
@@ -414,4 +417,19 @@ source /opt/rh/devtoolset-6/enable
 # -------------------------------------------------------------
 mkdir ~/.vim
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+
+
+# -------------------------------------------------------------
+# GDB debug
+# -------------------------------------------------------------
+# turn off SIGQUIT
+handle SIGQUIT nostop
+
+
+# show threads
+info threads
+
+# show shared library
+info sharedlibrary
+
 
