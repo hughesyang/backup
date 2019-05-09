@@ -2,11 +2,13 @@
 
 # wrapper of egrep
 
-if [ $# -ne "1" ]; then
-  echo "Usage: `basename $0` <pattern>"
+if [ $# -gt 2 ]; then
+  echo "Usage: `basename $0` [str] <params>"
   exit
 fi
 
-NAME_TO_FIND=$1
 
-egrep ${NAME_TO_FIND} . -r --color=auto
+NAME_TO_FIND=$1
+PARAMS=$2
+
+egrep ${NAME_TO_FIND} . -r${PARAMS} --color=auto
