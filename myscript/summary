@@ -74,6 +74,12 @@ ulimit -c
 ulimit -c unlimited
 
 
+# how to get which CPU core process is running
+top
+// then you have to press f while viewing the main screen to enter the Fields Management screen, arrow down to P = Last Used CPU (SMP) and toggle it on with d or space. Press q or escape to return to the main screen.
+
+
+
 # unzip the .iso file
 mount -o loop xxx.iso /mnt/tmp
 
