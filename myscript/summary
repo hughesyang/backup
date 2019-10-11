@@ -85,6 +85,9 @@ top -p $(echo $(pgrep ksoft) | tr " " ",")
 # unzip the .iso file
 mount -o loop xxx.iso /mnt/tmp
 
+# How to solve "device is busy" in umount
+lsos /mnt/123    // your mount point, then kill the users
+
 
 # check the disk partitions
 du -lh

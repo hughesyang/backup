@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# qumran api branch merge 
+
+BranchList="
+ tmp_f4_monitor
+ master
+"
+WS_BR=F4_R18.1.x
+
+
+for T in ${BranchList}; do
+    echo "Merge to branch -> ${T}"
+    git co ${T}
+    git rebase ${WS_BR}
+    git push
+done
+
+git co ${WS_BR}
+echo "Done, switch back to ${WS_BR}."
+
