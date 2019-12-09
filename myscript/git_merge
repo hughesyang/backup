@@ -4,9 +4,8 @@
 
 BranchList="
  tmp_f4_monitor
- master
 "
-WS_BR=F4_R18.1.x
+WS_BR=master
 
 
 for T in ${BranchList}; do

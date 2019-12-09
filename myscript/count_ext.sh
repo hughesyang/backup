@@ -46,7 +46,10 @@ TOTAL=0
 while read LINE
 do
     NUMBER=`echo ${LINE} | awk -F'[:]' '{print $2}'`
-    TOTAL=`expr $TOTAL + $NUMBER`
+    if [ $NUMBER -ne 0 ]
+    then
+        TOTAL=`expr $TOTAL + $NUMBER`
+    fi
 done < $RESULT 
 
 echo "Total lines: $TOTAL"
