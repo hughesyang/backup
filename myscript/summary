@@ -23,6 +23,10 @@ systemctl start rpcbind
 showmount -e 172.23.5.118
 
 
+// Whenever we modify /etc/exports, we must run:
+exportfs -ra
+
+
 // disable firewall
 systemctl disable firewalld.service
 
@@ -443,4 +447,8 @@ info threads
 # show shared library
 info sharedlibrary
 
+
+
+# clang format all files, need to run it at EDE
+find . -name '*.h' -o -name '*.hpp' -o -name '*.hxx' -o -name '*.cpp' -o -name '*.c' | xargs clang-format -i
 
