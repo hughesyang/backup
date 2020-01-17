@@ -452,3 +452,48 @@ info sharedlibrary
 # clang format all files, need to run it at EDE
 find . -name '*.h' -o -name '*.hpp' -o -name '*.hxx' -o -name '*.cpp' -o -name '*.c' | xargs clang-format -i
 
+
+
+# -------------------------------------------------------------
+# Show git branch name in shell, add below stuff to .bashrc
+# -------------------------------------------------------------
+
+## Parses out the git branch name from .git/HEAD:
+#---- start
+find_git_branch () {
+    local dir=. head
+    until [ "$dir" -ef /  ]; do
+        if [ -f "$dir/.git/HEAD"  ]; then
+            head=$(< "$dir/.git/HEAD")
+            if [[ $head = ref:\ refs/heads/*  ]]; then
+                git_branch=" → ${head#*/*/}"
+            elif [[ $head != ''  ]]; then
+                git_branch=" → (detached)"
+            else
+                git_branch=" → (unknow)"
+            fi  
+            return
+        fi  
+        dir="../$dir"
+    done
+    git_branch=''
+}
+
+PROMPT_COMMAND="find_git_branch; $PROMPT_COMMAND"
+
+# Here is bash color codes you can use
+black=$'\[\e[1;30m\]'
+red=$'\[\e[1;31m\]'
+green=$'\[\e[1;32m\]'
+yellow=$'\[\e[1;33m\]'
+blue=$'\[\e[1;34m\]'
+magenta=$'\[\e[1;35m\]'
+cyan=$'\[\e[1;36m\]'
+white=$'\[\e[1;37m\]'
+normal=$'\[\e[m\]'
+ 
+PS1="$white[$magenta\u$white@$green\h$white:$cyan\W$yellow\$git_branch$white]\$ $normal"
+
+# In case of AOS EDE, use below PS1
+#PS1="\[\033[01;32m\]\u@$(cat /etc/ede/ede_version) $EDE_NAME\[\033[01;34m\] \w$yellow\$git_branch$blue \n\$\[\033[00m\]"
+#--- end
