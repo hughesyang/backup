@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# The script copy qumran scripts to xg480
+# The script copy qumran NFS scripts to xg400
 
 if [ $# -ne "1" ]; then
   echo "Usage: `basename $0` <ip>"
