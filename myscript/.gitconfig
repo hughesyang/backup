@@ -1,0 +1,32 @@
+[user]
+	name = Hughes Yang
+	email = hyang@advaoptical.com
+[alias]
+	co = checkout
+	br = branch
+	ci = commit
+	st = status
+	di = diff
+	mergetest = "!f(){ git merge --no-commit --no-ff \"$1\"; git merge --abort; echo \"Merge aborted\"; };f "
+
+    ignore = update-index --assume-unchanged
+	unignore = update-index --no-assume-unchanged
+	ignored = !git ls-files -v | grep "^[[:lower:]]"
+
+    # show all commmit logs
+    #lg = log --graph --oneline --decorate --all
+    lg = log --graph --oneline --decorate --all --format=format:'%C(yellow)%h%C(reset) - %C(green)(%ar)%C(reset) - %C(magenta)%an%C(reset) - %C(white)%s%C(reset)  %C(auto)%d%C(reset)'
+
+    # show all branches relationships
+    lg1 = log --graph --oneline --decorate --simplify-by-decoration --all
+    # show all branches relationships, much more pretty--
+    lg2 = log --graph --oneline --decorate --simplify-by-decoration --all --format=format:'%C(yellow)%h%C(reset) - %C(green)(%ar)%C(reset) - %C(magenta)%an%C(reset) - %C(white)%s%C(reset) %C(yellow)%d%C(reset)'
+
+[color]
+	ui = true
+[http]
+    proxy = 172.20.1.3:80
+[push]
+    default = simple
+[pull]
+	rebase = true

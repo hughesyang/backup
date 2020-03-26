@@ -18,8 +18,8 @@ function log()
 # ----------------------------------------------------------------------------------
 
 # commands
-SCP_CMD="sudo scp -P 614"
-SSH_CMD="sudo ssh -p 614"
+SCP_CMD="scp -P 614"
+SSH_CMD="ssh -p 614"
 
 # local path storing scripts
 LOCAL_PATH=/home/hughes/upload/dnx
