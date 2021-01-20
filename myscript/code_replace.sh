@@ -11,11 +11,17 @@ fi
 FROM=$1
 TO=$2
 
-FIND=`grep "${FROM}" -r`
+echo "src=${FROM}, dest=${TO}"
+
+FIND=`grep "${FROM}" -rw`
 
 echo "${FIND}"
 
-sed -i "s/${FROM}/${TO}/g" `grep "${FROM}" -rl` 
+# "@" can handle blank
+sed -i "s@\<${FROM}\>@${TO}@g" `grep "${FROM}" -rl` 
+
+# below
+#sed -i "s/${FROM}/${TO}@g" `grep "${FROM}" -rl` 
 
 echo "Done..."
 

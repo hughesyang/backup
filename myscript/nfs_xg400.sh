@@ -35,5 +35,8 @@ cd ${LOCAL_PATH}
 ${SCP_CMD} * ${BOX_LOGIN}:/opt/adva/qumran/dnx
 ${SSH_CMD} ${BOX_LOGIN} 'cd /opt/adva/qumran/dnx; sudo cp bashrc /etc/bash/'
 
+# copy tcpdump
+#${SSH_CMD} ${BOX_LOGIN} 'cd /opt/adva/qumran/dnx; sudo tar jxf tcpdump.tar.bz2 -C /'
+
 log "*** Done ***"
 exit 0
