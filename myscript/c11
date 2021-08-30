@@ -2,13 +2,15 @@
 
 # compile c11 files
 
-if [ $# -gt 1 ]; then
-  echo "Usage: `basename $0` <source file, e.g. test.cpp>"
-  exit
-fi
+#if [ $# -gt 1 ]; then
+#  echo "Usage: `basename $0` <source file, e.g. test.cpp>"
+#  exit
+#fi
 
 
-SRC_FILE=$1
+#SRC_FILE=$1
+SRC_FILE=$*
 
-g++ -std=c++0x -pthread -o test ${SRC_FILE}
+#g++ -std=c++0x -pthread -o test ${SRC_FILE}
+g++ -std=c++17 -pthread -o test ${SRC_FILE}
 

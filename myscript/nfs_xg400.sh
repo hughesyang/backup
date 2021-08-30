@@ -35,6 +35,9 @@ cd ${LOCAL_PATH}
 ${SCP_CMD} * ${BOX_LOGIN}:/opt/adva/qumran/dnx
 ${SSH_CMD} ${BOX_LOGIN} 'cd /opt/adva/qumran/dnx; sudo cp bashrc /etc/bash/'
 
+# set hostname, in upper-case
+${SSH_CMD} ${BOX_LOGIN} 'HOST=`hostname`; sudo echo "HY-${HOST^^}" > /etc/hostname'
+
 # copy tcpdump
 #${SSH_CMD} ${BOX_LOGIN} 'cd /opt/adva/qumran/dnx; sudo tar jxf tcpdump.tar.bz2 -C /'
 

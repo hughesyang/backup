@@ -388,6 +388,103 @@ C-b t       // show clock
 
 
 ##########################
+### HOWTO ip command
+##########################
+
+# -s -s can be added to each ip sub command, to show more info
+
+# set device up, mtu, address
+ip link set dev eth0 up		//ifconfig eth0 up
+ip link set dev eth0 mtu 1500
+ip link set dev eth0 address 00:01:4f:00:15:f1
+
+# show device 
+ip link show domif_1_1_1_1_1
+	1073741855: domif_1_1_1_1_1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9590 qdisc noqueue master V$v_16777217 state UP mode DEFAULT group 1000 qlen 1000
+		link/ether 84:c8:07:1d:4a:26 brd ff:ff:ff:ff:ff:ff
+
+# show device address		
+ip addr show domif_1_1_1_1_1
+	1073741855: domif_1_1_1_1_1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9590 qdisc noqueue master V$v_16777217 state UP group 1000 qlen 1000
+		link/ether 84:c8:07:1d:4a:26 brd ff:ff:ff:ff:ff:ff
+		inet 175.23.193.21/24 brd 175.23.193.255 scope global domif_1_1_1_1_1
+		   valid_lft forever preferred_lft forever
+
+ip -s -s link show eth0		//ifconfig eth0, can show counters
+	8: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
+		link/ether 84:c8:07:1d:4a:00 brd ff:ff:ff:ff:ff:ff
+		RX: bytes  packets  errors  dropped overrun mcast   
+		696032     5997     0       0       0       0       
+		RX errors: length   crc     frame   fifo    missed
+				   0        0       0       0       0       
+		TX: bytes  packets  errors  dropped carrier collsns 
+		2170858    4889     0       0       0       0       
+		TX errors: aborted  fifo   window heartbeat transns
+				   0        0       0       0       6       
+
+
+# show neighbour/arp table
+ip neighbour/n show
+ip neighbour show dev domif_1_1_1_1_1
+	175.23.193.11 lladdr 84:c8:07:1d:46:26 PERMANENT
+
+# add/delete static next hop to eth4
+ip neighbour add 10.0.0.3 lladdr 1:2:3:4:5:6 dev eth4 nud perm
+ip neighbour del 10.0.0.3 dev eth4	
+	
+	
+# show mc route all enntries
+ip mroute/mr show table all
+	(175.23.198.244,226.0.0.22)      Iif: tun0        State: resolved Table: 16842753
+	(175.23.198.244,226.0.0.23)      Iif: tun0        State: resolved Table: 16842753
+	(175.23.198.244,226.0.0.24)      Iif: tun0        State: resolved Table: 16842753
+
+# show mc address 
+ip maddress/ma show
+ip maddress show dev domif_1_1_5_1_1
+	1073741857:     domif_1_1_5_1_1
+			link  01:00:5e:00:00:01 users 2
+			link  01:00:5e:00:00:0d users 2
+			link  01:00:5e:00:00:05 users 2
+			link  01:00:5e:00:00:06 users 2
+			inet  224.0.0.6
+			inet  224.0.0.5
+			inet  224.0.0.13
+			inet  224.0.0.1
+			inet6 ff02::2
+			inet6 ff02::1
+			inet6 ff01::1
+	
+# monitor changes in routing tables	
+ip monitor/mon	
+
+e.g. 
+ip -ts mon dev domif_1_117_1_1  	// -ts means to dump with timestamp(short)
+	[2021-04-22T02:55:09.818512] Deleted (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16777218  State: resolved Table: 16777218
+	[2021-04-22T02:55:11.301324] [2021-04-22T02:55:58.696369] [2021-04-22T02:55:58.697027] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1  State: resolved Table: 16842754
+	[2021-04-22T02:55:58.697431] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16842754  State: resolved Table: 16842754
+	[2021-04-22T02:55:58.697582] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16777218  State: resolved Table: 16777218
+	[2021-04-22T02:55:58.699135] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1  State: resolved Table: 16777218
+	[2021-04-22T02:55:58.700756] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16842754 domif_1_118_1_1  State: resolved Table: 16842754
+	[2021-04-22T02:55:58.700848] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16777218  State: resolved Table: 16777218
+	[2021-04-22T02:55:58.704480] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: domif_1_118_1_1  State: resolved Table: 16777218
+	[2021-04-22T02:56:58.588293] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: domif_1_118_1_1  State: resolved Table: 16842754
+	[2021-04-22T02:56:58.588696] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16842754 domif_1_118_1_1  State: resolved Table: 16842754
+	[2021-04-22T02:56:58.588804] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16777218  State: resolved Table: 16777218
+	[2021-04-22T02:57:08.591600] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16842754 domif_1_118_1_1  State: resolved Table: 16842754
+	[2021-04-22T02:57:08.591695] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16777218  State: resolved Table: 16777218
+	[2021-04-22T02:58:02.529996] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16842754  State: resolved Table: 16842754
+	[2021-04-22T02:58:02.530583] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: pimreg16777218  State: resolved Table: 16777218
+	[2021-04-22T02:58:02.574135] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1  State: resolved Table: 16842754
+	[2021-04-22T02:58:02.576258] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1  State: resolved Table: 16777218
+	[2021-04-22T02:58:18.677117] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: domif_1_118_1_1  State: resolved Table: 16842754
+	[2021-04-22T02:58:18.679578] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1 Oifs: domif_1_118_1_1  State: resolved Table: 16777218
+	[2021-04-22T02:58:38.480906] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1  State: resolved Table: 16842754
+	[2021-04-22T02:58:38.482920] (175.23.195.12,225.0.0.1)        Iif: domif_1_117_1_1  State: resolved Table: 16777218
+
+
+
+##########################
 ### HOWTO vim
 ##########################
 
