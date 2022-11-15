@@ -13,4 +13,5 @@ SRC_FILE=$*
 
 #g++ -std=c++0x -pthread -o test ${SRC_FILE}
 g++ -std=c++17 -pthread -o test ${SRC_FILE}
+#g++ -std=c++2a -pthread -o test ${SRC_FILE}
 
