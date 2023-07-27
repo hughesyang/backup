@@ -100,6 +100,11 @@ mount -o loop xxx.iso /mnt/tmp
 # How to solve "device is busy" in umount
 lsof /mnt/123    // your mount point, then kill the users
 
+## or:
+umount -l /mnt/123  // your mount point
+
+
+
 # How to chech which port is LISTEN
 lsof -P | grep LISTEN
 or
@@ -611,3 +616,10 @@ PS1="$white[$magenta\u$white@$green\h$white:$cyan\W$yellow\$git_branch$white]\$ 
 # In case of AOS EDE, use below PS1
 #PS1="\[\033[01;32m\]\u@$(cat /etc/ede/ede_version) $EDE_NAME\[\033[01;34m\] \w$yellow\$git_branch$blue \n\$\[\033[00m\]"
 #--- end
+
+
+# copy files
+rsync -ai hughes@172.23.5.118:~/f3/r9.5egx.tar .
+
+
+

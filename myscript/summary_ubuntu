@@ -1,0 +1,45 @@
+
+
+# ----------------------------------------------------------
+# How to extend root partition
+# ----------------------------------------------------------
+https://www.linuxtechi.com/extend-lvm-partitions/
+
+
+# view total, usaged and available disk space
+df -h /home/
+
+# check whether free space is available space in the volume group
+sudo vgdisplay 
+
+# inrease the size
+#sudo lvextend -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv
+sudo lvextend -L +350G /dev/mapper/ubuntu--vg-ubuntu--lv
+
+# update file system
+sudo resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv
+
+# view again
+df -h /home/ 
+
+
+# ----------------------------------------------------------
+# How to enable sudo without password
+# ----------------------------------------------------------
+1. Open the /etc/sudoers file (as root, of course!). You should never edit /etc/sudoers with a regular text editor, such as Vim or nano, because they do not validate the syntax like the visudo editor.
+   sudo visudo
+2. At the end of the /etc/sudoers file add this line
+   hughes     ALL=(ALL) NOPASSWD:ALL
+
+
+# ----------------------------------------------------------
+# How to rename network interface to eth0
+# ----------------------------------------------------------
+1. sudo nano /etc/netplan/00-installer-config.yaml    // backup before modify
+2. add below stuff under enp0s31f6
+      match:
+              macaddress: cc:96:e5:04:05:2b
+                    set-name: eth0
+3. sudo netplan try
+4. sudo netplan apply
+
