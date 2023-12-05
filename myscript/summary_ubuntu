@@ -43,3 +43,7 @@ df -h /home/
 3. sudo netplan try
 4. sudo netplan apply
 
+#-----------------------------------------------------------
+#Ubuntu mount udisk
+#-----------------------------------------------------------
+sudo mount -t vfat -o uid=1000,gid=1000 /dev/sda1 /media/usb
