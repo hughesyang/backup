@@ -44,6 +44,31 @@ df -h /home/
 4. sudo netplan apply
 
 #-----------------------------------------------------------
-#Ubuntu mount udisk
+# Ubuntu mount udisk
 #-----------------------------------------------------------
-sudo mount -t vfat -o uid=1000,gid=1000 /dev/sda1 /media/usb
+sudo mount -t vfat -o uid=1000,gid=1000 /dev/sdb1 /media/usb
+
+
+#-----------------------------------------------------------
+# Docker, pull ubuntu
+#-----------------------------------------------------------
+sudo docker pull ubuntu
+sudo docker pull ubuntu:18.04   # with specified tag release 18.04. Go to https://hub.docker.com to check the full supported tags list.
+
+
+#-----------------------------------------------------------
+# Set timezone
+#-----------------------------------------------------------
+sudo timedatectl set-timezone Asia/Shanghai
+
+
+#-----------------------------------------------------------
+# Zerotier
+#-----------------------------------------------------------
+sudo systemctl start zerotier-one.service
+sudo systemctl stop zerotier-one.service
+
+# enable/disalbe auto runing after startup
+systemctl enable zerotier-one.service
+systemctl disable zerotier-one.service
+
